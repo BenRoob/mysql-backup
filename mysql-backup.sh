@@ -45,7 +45,7 @@ fi
 #
 echo "Start MySQL-Backup"
 echo "dump structure only"
-mysqldump $DB_PARAMS --no-data $DB_NAME > $BACKUP_FOLDER/$DUMP_FILE_STRUCTURE
+mysqldump $DB_PARAMS --no-data --skip-triggers $DB_NAME > $BACKUP_FOLDER/$DUMP_FILE_STRUCTURE
 
 
 
