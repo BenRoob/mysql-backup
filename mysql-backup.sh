@@ -6,8 +6,8 @@
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_NAME=me
-DB_USER=root
-DB_PASSWORD=admin
+DB_USER=me
+DB_PASSWORD=
 
 NOW=$(date +'%Y-%m-%d')
 
