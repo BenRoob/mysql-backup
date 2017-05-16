@@ -1,14 +1,5 @@
 #!/bin/bash
 
-#
-# vars
-#
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_NAME=me
-DB_USER=me
-DB_PASSWORD=
-
 NOW=$(date +'%Y-%m-%d')
 
 #
@@ -25,6 +16,7 @@ DUMP_FILE_FUNCTIONS=${NOW}_dump_functions.sql
 #exit 1
 
 # create folder if not exist
+# TODO swap to a function (create_backup_folders) >> $1 = $NOW
 BACKUP_FOLDER="./dumps/${NOW}/"
 if [ ! -d $BACKUP_FOLDER ]; 
 then
@@ -42,22 +34,39 @@ fi
 
 #
 # start dump commands
-#
+# TODO swap to function mysql_dump_structure
 echo "Start MySQL-Backup"
-echo "dump structure only"
-mysqldump $DB_PARAMS --no-data --skip-triggers $DB_NAME > $BACKUP_FOLDER/$DUMP_FILE_STRUCTURE
+echo "dump structure only - disabled !!!"
+#mysqldump $DB_PARAMS --no-data --skip-triggers --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_FOLDER/$DUMP_FILE_STRUCTURE
 
 
+##
+# start data export
+# TODO swap to function mysql_dump_data
+##
+echo "show tables in ${DB_NAME}" | mysql ${DB_PARAMS} ${DB_NAME} > tmp_tables.sql
+#cat tmp_tables.sql
 
-echo "dump data for tables in included"
-for TABLE in ${INCLUDE_DATA_TABLES[@]}
-do :
-	echo "dump data from: ${TABLE}"
-	mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_FOLDER_DATA$TABLE.sql
-done
+while IFS= read -r TABLE; 
+do
+	#[[ $EXCLUDE_DATA_TABLES =~ (^|[[:space:]])"$TABLE"($|[[:space:]]) ]] && echo 'yes' || echo 'no'
+	if grep -Fxq "$TABLE" exclude-tables
+	then
+		#... found
+		echo "${TABLE} ... ignored"
+	else
+		# ... not found
+		echo "${TABLE} ... dump data..."
+		#mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_FOLDER_DATA$TABLE.sql
+	fi
+done < tmp_tables.sql
 
+# delete tmp file
+rm -r tmp_tables.sql
 
+#
 # export only triggers, procedures etc.
-echo "dump functions etc..."
-mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $dbName > $BACKUP_FOLDER$DUMP_FILE_FUNCTIONS
+# TODO swap to function mysql_dump_functions
+#echo "dump functions etc..."
+#mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $dbName > $BACKUP_FOLDER$DUMP_FILE_FUNCTIONS
 

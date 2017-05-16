@@ -1,2 +1,4 @@
 /dumps/*
 /mysql-backup.conf
+/exclude-tables
+/tables.sql
