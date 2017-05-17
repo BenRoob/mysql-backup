@@ -1,13 +1,12 @@
 #!/bin/bash
+# TODO docs, info...
+
+NOW=$(date +'%Y-%m-%d')
 
 #
 # includes
 #
 source ./config.sh
-
-#echo $DB_PARAMS
-#exit 1
-NOW=$(date +'%Y-%m-%d')
 
 
 ##
@@ -42,10 +41,6 @@ function backup_table_structure() {
 # dump tables
 ##
 function backup_table_data() {
-    ##
-    # start data export
-    ##
-
     # echo all tables in a list as file (temporary)
     echo "show tables in ${DB_NAME}" | mysql ${DB_PARAMS} ${DB_NAME} > tmp_tables.sql
     #cat tmp_tables.sql
@@ -73,8 +68,8 @@ function backup_table_data() {
 # export only triggers, procedures etc.
 ##
 function backup_functions() {
-    echo "dump functions etc..."
-    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $dbName > $BACKUP_FOLDER$DUMP_FILE_FUNCTIONS
+    echo "dump triggers, procedures etc..."
+    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $DB_NAME > $BACKUP_FOLDER$DUMP_FILE_FUNCTIONS
 }
 
 ##
@@ -93,7 +88,54 @@ function do_backup() {
     create_backup_folders $DATE
     backup_table_structure
     backup_functions
-    backup_table_data 
+    backup_table_data
+}
+
+
+function check_backup_folders() {
+    #
+    BACKUP_FOLDER="./dumps/$1/"
+    if [ ! -d $BACKUP_FOLDER ];
+    then
+        echo "Error: backup directory does not exist: ${BACKUP_FOLDER}"
+        exit
+    fi
+
+    BACKUP_FOLDER_DATA="${BACKUP_FOLDER}/data/"
+    if [ ! -d $BACKUP_FOLDER_DATA ];
+    then
+        echo "Error: backup data directory does not exist: ${BACKUP_FOLDER_DATA}"
+        exit
+    fi
+}
+
+
+function create_database() {
+
+    echo "Creating database $DB_NAME:"
+    RESULT=`mysql $DB_PARAMS --skip-column-names -e "SHOW DATABASES LIKE '${DB_NAME}'"`
+    if [ "$RESULT" == "$DB_NAME" ]; then
+        echo "Database already exists..."
+    else
+        echo "Database does not exist - create $DB_NAME..."
+        mysql $DB_PARAMS -e 'CREATE DATABASE IF NOT EXISTS `${DB_NAME}` CHARACTER SET utf8 COLLATE utf8_general_ci'
+    fi
+
+}
+
+
+function do_restore() {
+    DATE=$1
+    echo "do_restore $DATE"
+    if [ -z $DATE ]
+    then
+        echo "Error: option date must not by empty!"
+        exit
+    fi
+    
+    # check if restore folder exists
+    check_backup_folders $DATE
+    create_database
 }
 
 
@@ -120,13 +162,13 @@ esac
 ##
 # other options
 ##
-OPTION_A=0
+OPTION_DATE=$NOW
 shift
-while getopts ":a:" OPTION; do
+while getopts ":t:" OPTION; do
     case $OPTION in
-        a)
-            echo "-a was triggered, parameter: $OPTARG" >&2
-            OPTION_A=$OPTARG
+        t)
+            echo "-t was triggered, parameter: $OPTARG" >&2
+            OPTION_DATE=$OPTARG
             ;;
         \?)
             echo "Invalid  option: -$OPTARG" >&2
@@ -148,6 +190,7 @@ case $COMMAND in
         ;;
     2)
         echo "restore databse ${DB_NAME}..."
+        do_restore $OPTION_DATE
         ;;
 esac
 
