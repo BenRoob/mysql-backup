@@ -81,9 +81,15 @@ function backup_functions() {
 #
 ##
 function do_backup() {
-    # TODO check date
-    echo $1
+    #echo "do_backup arg1=$1"
+    #exit
     DATE=$1
+    if [ -z $DATE  ] 
+    then
+        echo "ERROR: date must not be empty"
+        exit
+    fi
+
     create_backup_folders $DATE
     backup_table_structure
     backup_functions
@@ -91,7 +97,58 @@ function do_backup() {
 }
 
 
-# TODO check if date is in paramter, default=NOW
+##
+# read command from options
+##
+COMMAND=0
+case $1 in
+    "dump")
+        #echo "Command: dump"
+        COMMAND=1
+        ;;
+    "restore")
+        #echo "Command: restore"
+        COMMAND=2
+        ;;
+    *)
+        echo "invalid command specified {dump|restore}!."
+        exit 1
+        ;;
+esac
 
-do_backup $NOW
+
+##
+# other options
+##
+OPTION_A=0
+shift
+while getopts ":a:" OPTION; do
+    case $OPTION in
+        a)
+            echo "-a was triggered, parameter: $OPTARG" >&2
+            OPTION_A=$OPTARG
+            ;;
+        \?)
+            echo "Invalid  option: -$OPTARG" >&2
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            ;;
+    esac
+done
+
+
+##
+# start database command
+##
+case $COMMAND in
+    1)
+        echo "dumping database ${DB_NAME}..."
+        do_backup $NOW
+        ;;
+    2)
+        echo "restore databse ${DB_NAME}..."
+        ;;
+esac
+
 exit
