@@ -12,8 +12,6 @@ DUMP_FILE_STRUCTURE=${NOW}_dump_structure.sql
 DUMP_FILE_FUNCTIONS=${NOW}_dump_functions.sql
 
 
-TEST="Hello World!"
-
 # tables to export
 INCLUDE_DATA_TABLES=(
 table_name_1
@@ -21,6 +19,7 @@ table_name_2
 )
 
 
+# eclude tables from data dump
 EXCLUDE_DATA_TABLES=(
 BerichtServiceRequest
 AktionServiceRequest
