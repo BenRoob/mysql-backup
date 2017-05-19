@@ -12,20 +12,20 @@ source ./config.sh
 ##
 # backup folders
 ##
-function create_backup_folders() {
+function create_backup_dirs() {
     # create folder 
-    BACKUP_FOLDER="./dumps/$1/"
-    if [ ! -d $BACKUP_FOLDER ]; 
+    BACKUP_DIR="$BACKUP_DIRECTORY/$1/"
+    if [ ! -d $BACKUP_DIR ]; 
     then
-	    echo "create backup folder: ${BACKUP_FOLDER}"
-	    mkdir -p $BACKUP_FOLDER
+	    echo "create backup dir: ${BACKUP_DIR}"
+	    mkdir -p $BACKUP_DIR
     fi
 
-    BACKUP_FOLDER_DATA="${BACKUP_FOLDER}/data/"
-    if [ ! -d $BACKUP_FOLDER_DATA ];
+    BACKUP_DIR_DATA="${BACKUP_DIR}/data/"
+    if [ ! -d $BACKUP_DIR_DATA ];
     then
-		echo "create backup data folder: ${BACKUP_FOLDER_DATA}"
-		mkdir -p $BACKUP_FOLDER_DATA
+		echo "create backup data dir: ${BACKUP_DIR_DATA}"
+		mkdir -p $BACKUP_DIR__DATA
 	fi
 }
 
@@ -34,7 +34,7 @@ function create_backup_folders() {
 ##
 function backup_table_structure() {
     echo "dump structure only"
-    mysqldump $DB_PARAMS --no-data --skip-triggers --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_FOLDER/$DUMP_FILE_STRUCTURE
+    mysqldump $DB_PARAMS --no-data --skip-triggers --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/$DUMP_FILE_STRUCTURE
 }
 
 ##
@@ -55,7 +55,7 @@ function backup_table_data() {
 	    else
 		    # ... not found
 		    echo "${TABLE} ... dump data..."
-		    mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_FOLDER_DATA$TABLE.sql
+		    mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_DIR_DATA$TABLE.sql
 	    fi
     done < tmp_tables.sql
 
@@ -69,7 +69,7 @@ function backup_table_data() {
 ##
 function backup_functions() {
     echo "dump triggers, procedures etc..."
-    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $DB_NAME > $BACKUP_FOLDER$DUMP_FILE_FUNCTIONS
+    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $DB_NAME > $BACKUP_DIR$DUMP_FILE_FUNCTIONS
 }
 
 ##
@@ -85,24 +85,25 @@ function do_backup() {
         exit
     fi
 
-    create_backup_folders $DATE
+    create_backup_dirs $DATE
     backup_table_structure
     backup_functions
     backup_table_data
 }
 
 
-function check_backup_folders() {
-    #
-    BACKUP_FOLDER="./dumps/$1/"
-    if [ ! -d $BACKUP_FOLDER ];
+function check_backup_dirs() {
+    # directory exists?
+    BACKUP_DIR="$BACKUP_DIRECTORY/$1/"
+    if [ ! -d $BACKUP_DIR ];
     then
         echo "Error: backup directory does not exist: ${BACKUP_FOLDER}"
         exit
     fi
 
-    BACKUP_FOLDER_DATA="${BACKUP_FOLDER}/data/"
-    if [ ! -d $BACKUP_FOLDER_DATA ];
+    # data directory exists?
+    BACKUP_DIR_DATA="${BACKUP_DIR}data/"
+    if [ ! -d $BACKUP_DIR_DATA ];
     then
         echo "Error: backup data directory does not exist: ${BACKUP_FOLDER_DATA}"
         exit
@@ -117,10 +118,92 @@ function create_database() {
     if [ "$RESULT" == "$DB_NAME" ]; then
         echo "Database already exists..."
     else
-        echo "Database does not exist - create $DB_NAME..."
+        echo "Database does not exist - create $DB_NAME ..."
         mysql $DB_PARAMS -e 'CREATE DATABASE IF NOT EXISTS `${DB_NAME}` CHARACTER SET utf8 COLLATE utf8_general_ci'
     fi
+}
 
+
+function import_table_structure() {
+
+    DATE=$1
+    echo "import_table_structure $DATE"
+    if [ -z $DATE ]
+    then
+        echo "Error: option date must not by empty!"
+        exit
+    fi
+
+    IMPORT_STRUCTURE_FILE=$BACKUP_DIRECTORY$DATE/$DUMP_FILE_STRUCTURE
+    if [ ! -f $IMPORT_STRUCTURE_FILE ];
+    then
+        echo "${IMPORT_STRUCTURE_FILE} not found in backup directory!"
+        exit
+    fi
+
+
+    read -r -p "Are you sure to override the structure for config: ${DB_PARAMS}? [y/N] " RESPONSE
+    case "$RESPONSE" in
+         [yY][eE][sS]|[yY]) 
+            echo "import... structure"
+            mysql $DB_PARAMS $DB_NAME < $IMPORT_STRUCTURE_FILE
+            echo "finish import structure"
+           ;;
+        *)
+            echo "import_table_structure exit..."
+            exit;
+            ;;
+    esac
+}
+
+
+function confirm_import_table_data() {
+
+    read -r -p "Are you sure to override the data for config: ${DB_PARAMS}? [y/N] " RESPONSE
+    case "$RESPONSE" in
+         [yY][eE][sS]|[yY]) 
+            true
+           ;;
+        *)
+            false
+            ;;
+    esac
+}
+
+
+function import_table_data() {
+    DATE=$1
+    echo "import_table_structure $DATE"
+    if [ -z $DATE ]
+    then
+        echo "Error: option date must not by empty!"
+        exit
+    fi
+
+    BACKUP_DATA_DIR=${BACKUP_DIRECTORY}${NOW}/data/
+    if [ ! -d $BACKUP_DATA_DIR ];
+    then
+        echo "${BACKUP_DATA_DIR} must exist!"
+        exit
+    fi
+
+
+    for TABLE_DATA_FILE in `ls $BACKUP_DATA_DIR`;
+    do
+        echo $TABLE_DATA_FILE
+        # extract table name 
+        FILENAME=$(basename "$TABLE_DATA_FILE")
+        #EXTENSION="${FILENAME##*.}"
+        TABLE_NAME="${FILENAME%.*}"
+
+        if grep -Fxq "$TABLE_NAME" exclude-tables
+        then
+            echo "import ignored for table data file: ${FILENAME}"
+        else
+            echo "import table data for: ${TABLE_NAME}";
+            mysql $DB_PARAMS $DB_NAME < "$BACKUP_DATA_DIR/$TABLE_DATA_FILE"
+        fi
+    done
 }
 
 
@@ -132,10 +215,12 @@ function do_restore() {
         echo "Error: option date must not by empty!"
         exit
     fi
-    
+
     # check if restore folder exists
-    check_backup_folders $DATE
+    check_backup_dirs $DATE
     create_database
+    import_table_structure $DATE
+    confirm_import_table_data && import_table_data $DATE
 }
 
 
