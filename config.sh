@@ -23,6 +23,27 @@ table_name_2
 
 # eclude tables from data dump
 EXCLUDE_DATA_TABLES=(
-table_name_1
-table_name_2
+Tables_in_me
+BerichtServiceRequest
+AktionServiceRequest
+EmailLog
+ErrorLog
+DebugLog
+Document
+ImageData
+ImageThumbnail
+NutzerPasswortAenderung
+ObjektBackup
+SkpImageData
+SkpImageThumbnail
+SkpNutzerPasswortAnforderung
+TestImport
+_AktionBestaetigungSk
+ViewBefragungEingabeGesetzt
+ViewBefragungIncomplete
+ViewBefragungStarted
+ViewImageCount
+ViewImageCountBerichtBeginn
+ViewImageCountBerichtEnde
+ViewImageSize
 )
