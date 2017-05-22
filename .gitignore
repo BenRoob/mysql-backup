@@ -2,3 +2,4 @@
 /config.sh
 /exclude-tables
 /tables.sql
+/**/*.BAK
