@@ -14,18 +14,18 @@ source ./config.sh
 ##
 function create_backup_dirs() {
     # create folder 
-    BACKUP_DIR="$BACKUP_DIRECTORY/$1/"
+    BACKUP_DIR="$BACKUP_DIRECTORY/$1"
     if [ ! -d $BACKUP_DIR ]; 
     then
 	    echo "create backup dir: ${BACKUP_DIR}"
 	    mkdir -p $BACKUP_DIR
     fi
 
-    BACKUP_DIR_DATA="${BACKUP_DIR}/data/"
+    BACKUP_DIR_DATA="${BACKUP_DIR}/data"
     if [ ! -d $BACKUP_DIR_DATA ];
     then
 		echo "create backup data dir: ${BACKUP_DIR_DATA}"
-		mkdir -p $BACKUP_DIR__DATA
+		mkdir -p $BACKUP_DIR_DATA
 	fi
 }
 
@@ -55,7 +55,7 @@ function backup_table_data() {
 	    else
 		    # ... not found
 		    echo "${TABLE} ... dump data..."
-		    mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_DIR_DATA$TABLE.sql
+		    mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_DIR_DATA/$TABLE.sql
 	    fi
     done < tmp_tables.sql
 
