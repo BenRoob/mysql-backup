@@ -25,7 +25,7 @@ function create_backup_dirs() {
     if [ ! -d $BACKUP_DIR_DATA ];
     then
 		echo "create backup data dir: ${BACKUP_DIR_DATA}"
-		mkdir -p $BACKUP_DIR__DATA
+		mkdir -p $BACKUP_DIR_DATA
 	fi
 }
 
