@@ -55,7 +55,7 @@ function backup_table_data() {
 	    else
 		    # ... not found
 		    echo "${TABLE} ... dump data..."
-		    mysqldump $DB_PARAMS $DB_NAME $TABLE --no-create-info > $BACKUP_DIR_DATA/$TABLE.sql
+		    mysqldump $DB_PARAMS $DB_NAME $TABLE --ignore-table=$DB_NAME.ViewImageSize --no-create-info > $BACKUP_DIR_DATA/$TABLE.sql
 	    fi
     done < tmp_tables.sql
 
@@ -69,7 +69,7 @@ function backup_table_data() {
 ##
 function backup_functions() {
     echo "dump triggers, procedures etc..."
-    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt $DB_NAME > $BACKUP_DIR$DUMP_FILE_FUNCTIONS
+    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/$DUMP_FILE_FUNCTIONS
 }
 
 ##
