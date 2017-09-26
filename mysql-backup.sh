@@ -34,7 +34,14 @@ function create_backup_dirs() {
 ##
 function backup_table_structure() {
     echo "dump structure only"
-    mysqldump $DB_PARAMS --no-data --skip-triggers --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/$DUMP_FILE_STRUCTURE
+    
+    DATE=$1
+    if [ -z $DATE  ] 
+    then
+        echo "ERROR: date must not be empty"
+        exit
+    fi   
+    mysqldump $DB_PARAMS --no-data --skip-triggers --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/${DATE}$DUMP_FILE_STRUCTURE
 }
 
 ##
@@ -48,7 +55,7 @@ function backup_table_data() {
     while IFS= read -r TABLE; 
     do
 	    #[[ $EXCLUDE_DATA_TABLES =~ (^|[[:space:]])"$TABLE"($|[[:space:]]) ]] && echo 'yes' || echo 'no'
-	    if grep -Fxq "$TABLE" exclude-tables
+	    if grep -Fxq "$TABLE" $EXCLUDE_DUMP_TABLES
 	    then
 		    #... found
 		    echo "${TABLE} ... ignored"
@@ -69,7 +76,13 @@ function backup_table_data() {
 ##
 function backup_functions() {
     echo "dump triggers, procedures etc..."
-    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/$DUMP_FILE_FUNCTIONS
+    DATE=$1
+    if [ -z $DATE  ] 
+    then
+        echo "ERROR: date must not be empty"
+        exit
+    fi
+    mysqldump $DB_PARAMS --routines --no-create-info --no-data --no-create-db --skip-opt --ignore-table=$DB_NAME.ViewImageSize $DB_NAME > $BACKUP_DIR/${DATE}${DUMP_FILE_FUNCTIONS}
 }
 
 ##
@@ -86,8 +99,8 @@ function do_backup() {
     fi
 
     create_backup_dirs $DATE
-    backup_table_structure
-    backup_functions
+    backup_table_structure $DATE
+    backup_functions $DATE
     backup_table_data
 }
 
@@ -123,18 +136,21 @@ function create_database() {
     fi
 }
 
-
+##
+# import table structure file to DB schema
+##
 function import_table_structure() {
-
-    DATE=$1
-    echo "import_table_structure $DATE"
+	echo "import_table_structure $DATE"
+	# check date
+    DATE=$1 
     if [ -z $DATE ]
     then
         echo "Error: option date must not by empty!"
         exit
     fi
-
-    IMPORT_STRUCTURE_FILE=$BACKUP_DIRECTORY$DATE/$DUMP_FILE_STRUCTURE
+   
+   
+    IMPORT_STRUCTURE_FILE=$BACKUP_DIRECTORY$DATE/${DATE}${DUMP_FILE_STRUCTURE}
     if [ ! -f $IMPORT_STRUCTURE_FILE ];
     then
         echo "${IMPORT_STRUCTURE_FILE} not found in backup directory!"
@@ -196,7 +212,8 @@ function import_table_data() {
         #EXTENSION="${FILENAME##*.}"
         TABLE_NAME="${FILENAME%.*}"
 
-        if grep -Fxq "$TABLE_NAME" exclude-tables
+		## check is not neccessary, due to not exporting table data if data is exluded while dump process
+        if grep -Fxq "$TABLE_NAME" $EXCLUDE_DUMP_TABLES
         then
             echo "import ignored for table data file: ${FILENAME}"
         else
@@ -221,6 +238,7 @@ function do_restore() {
     create_database
     import_table_structure $DATE
     confirm_import_table_data && import_table_data $DATE
+    # TODO restore functions
 }
 
 
