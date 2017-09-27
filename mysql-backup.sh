@@ -196,7 +196,7 @@ function import_table_data() {
         exit
     fi
 
-    BACKUP_DATA_DIR=${BACKUP_DIRECTORY}${NOW}/data/
+    BACKUP_DATA_DIR=${BACKUP_DIRECTORY}${DATE}/data/
     if [ ! -d $BACKUP_DATA_DIR ];
     then
         echo "${BACKUP_DATA_DIR} must exist!"
