@@ -132,7 +132,7 @@ function create_database() {
         echo "Database already exists..."
     else
         echo "Database does not exist - create $DB_NAME ..."
-        mysql $DB_PARAMS -e 'CREATE DATABASE IF NOT EXISTS `${DB_NAME}` CHARACTER SET utf8 COLLATE utf8_general_ci'
+        mysql $DB_PARAMS -e "CREATE DATABASE IF NOT EXISTS `${DB_NAME}` CHARACTER SET utf8 COLLATE utf8_general_ci"
     fi
 }
 
@@ -213,7 +213,7 @@ function import_table_data() {
         TABLE_NAME="${FILENAME%.*}"
 
 		## check is not neccessary, due to not exporting table data if data is exluded while dump process
-        if grep -Fxq "$TABLE_NAME" $EXCLUDE_DUMP_TABLES
+        if grep - "$TABLE_NAME" $EXCLUDE_DUMP_TABLES
         then
             echo "import ignored for table data file: ${FILENAME}"
         else

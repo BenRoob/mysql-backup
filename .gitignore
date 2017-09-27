@@ -1,5 +1,4 @@
 /dumps/*
-/config.sh
-/exclude-tables
+/exclude-tables.cnf
 /tables.sql
 /**/*.BAK
