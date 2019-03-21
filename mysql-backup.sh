@@ -2,11 +2,24 @@
 # TODO docs, info...
 
 NOW=$(date +'%Y-%m-%d')
-
+LOG_FILE="./log.txt"
 #
 # includes
 #
 source ./config.sh
+
+
+##
+# log
+##
+function log_message {
+    _LOG_FILE_TIME=$(date +"%Y-%m-%d %H:%M:%S")
+    _LOG_MESSAGE=$1
+    if [[ -z  $_LOG_MESSAGE  ]]; then
+        exit;
+    fi 
+    echo $_LOG_FILE_TIME " - "  $_LOG_MESSAGE >> $LOG_FILE
+}
 
 
 ##
@@ -288,12 +301,16 @@ done
 ##
 case $COMMAND in
     1)
+	log_message "Backup script starting..."
         echo "dumping database ${DB_NAME}..."
         do_backup $NOW
+	log_message "Backup script finished."
         ;;
     2)
+	log_message "Restore starting..."
         echo "restore databse ${DB_NAME}..."
         do_restore $OPTION_DATE
+	log_message "Restore finished"
         ;;
 esac
 

@@ -2,3 +2,4 @@
 /exclude-tables.cnf
 /tables.sql
 /**/*.BAK
+/log.txt

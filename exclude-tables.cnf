@@ -1,4 +1,8 @@
 Tables_in_me
+AS2Nachricht
+AS2Log
+AS2Dokument
+AS2Kommunikation
 BerichtServiceRequest
 BerichtCreateBackup
 AktionServiceRequest
@@ -12,7 +16,7 @@ LoggingSmsLog
 LoggingProcessLog
 ErrorLog
 DebugLog
-Document
+DocumentData
 ImageData
 ImageThumbnail
 NutzerPasswortAenderung

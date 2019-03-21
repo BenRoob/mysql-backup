@@ -1,11 +1,13 @@
 #
 # DB vars
 #
-DB_HOST=127.0.0.1
+DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=me
-DB_USER=admin
-DB_PASSWORD=admin
+DB_USER=backup_user
+DB_PASSWORD=backup_user
+#DB_USER=root
+#DB_PASSWORD=admin
 
 DB_PARAMS="--host=${DB_HOST} --port=${DB_PORT} -u${DB_USER} -p${DB_PASSWORD}"
 
